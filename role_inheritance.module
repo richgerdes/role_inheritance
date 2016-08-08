@@ -1,0 +1,9 @@
+<?php
+
+function role_inheritance_entity_type_alter(array &$entity_types) {
+  /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
+  // Set the controller class for nodes to an alternate implementation of the
+  // Drupal\Core\Entity\EntityStorageInterface interface.
+  $entity_types['user_role']->setStorageClass('Drupal\role_inheritance\RoleInheritanceStorage');
+  debug("test");
+}
