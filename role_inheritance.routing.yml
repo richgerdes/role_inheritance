@@ -1,0 +1,7 @@
+role_inheritance.config_role_inheritance:
+  path: '/admin/people/roles/inheritance'
+  defaults:
+    _controller: '\Drupal\role_inheritance\Controller\RoleInheritancePageController::confRolesPage'
+    _title: 'Role Inheritance'
+  requirements:
+    _permission: 'access content'
