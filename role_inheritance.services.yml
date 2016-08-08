@@ -1,3 +1,0 @@
-services: 
-    role_inheritance.user.data:
-        class: Drupal\role_inheritance\RoleInheritanceStorage
