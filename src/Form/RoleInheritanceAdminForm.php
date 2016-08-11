@@ -31,6 +31,8 @@ class RoleInheritanceAdminForm extends FormBase {
       $role_names[$role_name] = $role->label();
     }
 
+    $role_mapping = _role_inheritance_roleMap();
+
     // Store $role_names for use when saving the data.
     $form['role_names'] = array(
       '#type' => 'value',
@@ -84,9 +86,10 @@ class RoleInheritanceAdminForm extends FormBase {
             '#attributes' => array('class' => array('rid-' . $srid, 'js-rid-' . $srid)),
             '#parents' => array($rid, $srid),
           );
-          
-          
-          
+
+          if(isset($role_mapping[$rid]) && in_array($srid, $role_mapping[$rid])){
+            $form['inheritance'][$rid][$srid]['#default_value'] = 1;
+          }
         }
       }
     }
@@ -112,6 +115,24 @@ class RoleInheritanceAdminForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+
+    $values = $form_state->getValues();
+    $roles = array_keys(user_roles());
+    
+    $mapping = array();
+
+    foreach ($roles as $role){
+
+      foreach ($values[$role] as $iRole => $inherit){
+        if($inherit){
+          $mapping[$role][] = $iRole;
+        }
+      }
+    }
+    
+    _role_inheritance_roleMap($mapping);
+      
+    drupal_flush_all_caches();
   }
 }
 ?>

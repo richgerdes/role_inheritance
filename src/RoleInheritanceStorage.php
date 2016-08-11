@@ -17,8 +17,6 @@ class RoleInheritanceStorage extends RoleStorage{
 
     $p = parent::isPermissionInRoles($permission, $extendedRids);
 
-    error_log(var_export(array($permissionk, $p), true));
-
     return $p;
   }
 
