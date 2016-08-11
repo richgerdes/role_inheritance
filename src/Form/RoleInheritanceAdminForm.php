@@ -42,8 +42,8 @@ class RoleInheritanceAdminForm extends FormBase {
     $form['inheritance'] = array(
       '#type' => 'table',
       '#header' => array($this->t('Inherit From')),
-      '#id' => 'inheritance',
-      '#attributes' => ['class' => ['inheritance', 'js-inheritance']],
+      '#id' => 'role-inheritance-all',
+      '#attributes' => ['class' => ['role-inheritance-all', 'js-role-inheritance-all']],
       '#sticky' => TRUE,
     );
     

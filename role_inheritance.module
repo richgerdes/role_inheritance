@@ -5,7 +5,7 @@ function role_inheritance_entity_type_build(array &$entity_types) {
    * Override entity storage class for user_role to allow for role inheritance
    * during priv validation
    */
-  
+
   $entity_types['user_role']->setStorageClass('Drupal\role_inheritance\RoleInheritanceStorage');
 }
 
@@ -23,20 +23,20 @@ function _role_inheritance_extendroles($rids){
       }
     }
   }
-  
+
   return $extended;
 }
 
 function _role_inheritance_roleMap_collpase($map, $collapse = array(), $role = NULL) {
-  
-  if ($role != NULL) {    
+
+  if ($role != NULL) {
     if (in_array($role, array_keys($map))) {
       $collapse[$role] = $map[$role];
     } else {
       $collapse[$role] = array();
     }
-    
-    foreach ($map[$role] as $id) {      
+
+    foreach ($map[$role] as $id) {
       if (in_array($id, array_keys($map))) {
         if (!in_array($id, array_keys($collapse))) {
           $collapse = _role_inheritance_roleMap_collpase($map, $collapse, $id);
@@ -44,7 +44,7 @@ function _role_inheritance_roleMap_collpase($map, $collapse = array(), $role = N
         $collapse[$role] = array_merge($collapse[$role],$collapse[$id]);
       }
     }
-    
+
   } else {
     foreach ($map as $id => $inherit) {
       if(!in_array($id, array_keys($collapse))) {
@@ -52,14 +52,14 @@ function _role_inheritance_roleMap_collpase($map, $collapse = array(), $role = N
       }
     }
   }
-  
+
   return $collapse;
 }
 
 function _role_inheritance_roleMap($updateMap = NULL, $collapse = false) {
   static $roleMap;
   static $roleMapCollapse;
-  
+
   if ($updateMap) {
     $roleMap = $updateMap;
 
@@ -72,7 +72,7 @@ function _role_inheritance_roleMap($updateMap = NULL, $collapse = false) {
   } else if (!$roleMap) {
     $config = \Drupal::service('config.factory')->getEditable('role_inheritance.settings');
     $roleMap = $config->get('role_map');
-  
+
     if (empty($roleMap) || !is_array($roleMap)) {
       $roleMap = array();
 
@@ -82,10 +82,48 @@ function _role_inheritance_roleMap($updateMap = NULL, $collapse = false) {
 
     $roleMapCollapse = _role_inheritance_roleMap_collpase($roleMap);
   }
-  
+
   if ($collapse) {
     return $roleMapCollapse;
   } else {
     return $roleMap;
   }
+}
+
+function role_inheritance_form_user_role_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  $role_names = array();
+  foreach (user_roles() as $role_name => $role) {
+    // Retrieve role names for columns.
+    $role_names[$role_name] = $role->label();
+  }
+
+  $role_mapping = _role_inheritance_roleMap();
+
+  $form['inheritance'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Inheritance'),
+    '#header' => array(t('Role'), t('Inherit From')),
+    '#id' => 'role-inheritance',
+    '#attributes' => ['class' => ['role-inheritance', 'js-role-inheritance']],
+    '#sticky' => TRUE,
+    '#options' => $role_names,
+    '#default_value' => $role_mapping[$form['id']['#default_value']],
+    '#description' => t('Select the roles that this role should inherit permission grants from.'),
+  );
+
+  $form['actions']['submit']['#submit'][] = 'role_inheritance_form_user_role_form_submit';
+}
+
+function role_inheritance_form_user_role_form_submit(&$form, \Drupal\Core\Form\FormStateInterface $form_state){
+  
+    $values = $form_state->getValues();
+    $roles = array_keys(user_roles());
+    
+    $mapping = _role_inheritance_roleMap();
+    
+    $mapping[$form['id']['#default_value']] = array_filter($values['inheritance']);
+    
+    _role_inheritance_roleMap($mapping);
+      
+    drupal_flush_all_caches();
 }
