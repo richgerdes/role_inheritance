@@ -2,14 +2,14 @@
 
 /**
  * @file
- * Contains Drupal\user\RoleStorage.
+ * Contains Drupal\role_inheritance\RoleStorage.
  */
 
 namespace Drupal\role_inheritance;
 
 use \Drupal\user\RoleStorage;
 
-class RoleInheritanceStorage extends RoleStorage{
+class RoleInheritanceStorage extends RoleStorage {
 
   public function isPermissionInRoles($permission, array $rids) {
 

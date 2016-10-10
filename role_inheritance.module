@@ -7,6 +7,7 @@ function role_inheritance_entity_type_build(array &$entity_types) {
    */
 
   $entity_types['user_role']->setStorageClass('Drupal\role_inheritance\RoleInheritanceStorage');
+  //$entity_types['user_role']->setClass('Drupal\role_inheritance\RoleInheritanceUser');
 }
 
 /**
