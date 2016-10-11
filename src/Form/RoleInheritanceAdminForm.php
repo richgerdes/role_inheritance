@@ -117,8 +117,6 @@ class RoleInheritanceAdminForm extends FormBase {
     }
 
     _role_inheritance_roleMap($mapping);
-
-    drupal_flush_all_caches();
   }
 }
 ?>

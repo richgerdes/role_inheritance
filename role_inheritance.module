@@ -125,5 +125,4 @@ function role_inheritance_form_user_role_form_submit(&$form, \Drupal\Core\Form\F
     $mapping[$values['id']] = array_filter($values['inheritance']);
 
     _role_inheritance_roleMap($mapping);
-    drupal_flush_all_caches();
 }
