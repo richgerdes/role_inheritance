@@ -29,7 +29,6 @@ function _role_inheritance_extendroles($rids){
 }
 
 function _role_inheritance_roleMap_collpase($map, $collapse = array(), $role = NULL) {
-
   if ($role != NULL) {
     if (in_array($role, array_keys($map))) {
       $collapse[$role] = $map[$role];
@@ -53,7 +52,6 @@ function _role_inheritance_roleMap_collpase($map, $collapse = array(), $role = N
       }
     }
   }
-
   return $collapse;
 }
 
@@ -62,7 +60,7 @@ function _role_inheritance_roleMap($updateMap = NULL, $collapse = false) {
   static $roleMapCollapse;
 
   if ($updateMap) {
-    $roleMap = $updateMap;
+    $roleMap = array_filter($updateMap);
 
     $config = \Drupal::service('config.factory')->getEditable('role_inheritance.settings');
     $config->set('role_map', $roleMap);
@@ -100,7 +98,9 @@ function role_inheritance_form_user_role_form_alter(&$form, \Drupal\Core\Form\Fo
 
   $role_mapping = _role_inheritance_roleMap();
 
-  $inherits = $role_mapping[$form['id']['#default_value']];
+  if (isset($form['id']) && isset($form['id']['#default_value']) && $form['id']['#default_value']) {
+    $inherits = $role_mapping[$form['id']['#default_value']];
+  }
 
   $form['inheritance'] = array(
     '#type' => 'checkboxes',
