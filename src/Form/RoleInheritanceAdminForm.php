@@ -1,19 +1,15 @@
 <?php
-/**
- * @file
- * Contains \Drupal\role_inheritance\Form\RoleInheritanceAdminForm.
- */
 
 namespace Drupal\role_inheritance\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Component\Utility\UrlHelper;
 
 /**
  * Contribute form.
  */
 class RoleInheritanceAdminForm extends FormBase {
+
   /**
    * {@inheritdoc}
    */
@@ -27,7 +23,7 @@ class RoleInheritanceAdminForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $roles = user_roles();
 
-    $role_mapping = _role_inheritance_roleMap();
+    $role_mapping = _role_inheritance_role_map();
 
     $form['inheritance'] = array(
       '#type' => 'table',
@@ -54,15 +50,16 @@ class RoleInheritanceAdminForm extends FormBase {
         ),
       );
       foreach ($roles as $srid => $srole) {
-        if($srid == $rid){
+        if ($srid == $rid) {
           $form['inheritance'][$rid][$srid] = array(
             '#type' => 'inline_template',
             '#template' => '<center>X</center>',
             '#style' => 'text-align:center;',
           );
-        }else{
+        }
+        else {
           $form['inheritance'][$rid][$srid] = array(
-            '#title' => $role->label() . ' inherits from ' .  $srole->label(),
+            '#title' => $role->label() . ' inherits from ' . $srole->label(),
             '#title_display' => 'invisible',
             '#wrapper_attributes' => array(
               'class' => array('checkbox'),
@@ -73,13 +70,12 @@ class RoleInheritanceAdminForm extends FormBase {
             '#parents' => array($rid, $srid),
           );
 
-          if(isset($role_mapping[$rid]) && in_array($srid, $role_mapping[$rid])){
+          if (isset($role_mapping[$rid]) && in_array($srid, $role_mapping[$rid])) {
             $form['inheritance'][$rid][$srid]['#default_value'] = 1;
           }
         }
       }
     }
-
 
     $form['actions'] = array('#type' => 'actions');
     $form['actions']['submit'] = array(
@@ -107,16 +103,16 @@ class RoleInheritanceAdminForm extends FormBase {
 
     $mapping = array();
 
-    foreach ($roles as $role){
+    foreach ($roles as $role) {
 
-      foreach ($values[$role] as $iRole => $inherit){
-        if($inherit){
+      foreach ($values[$role] as $iRole => $inherit) {
+        if ($inherit) {
           $mapping[$role][] = $iRole;
         }
       }
     }
 
-    _role_inheritance_roleMap($mapping);
+    _role_inheritance_role_map($mapping);
   }
+
 }
-?>

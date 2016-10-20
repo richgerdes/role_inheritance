@@ -1,25 +1,33 @@
 <?php
 
-function role_inheritance_entity_type_build(array &$entity_types) {
-  /**
-   * Override entity storage class for user_role to allow for role inheritance
-   * during priv validation
-   */
+/**
+ * @file
+ * Module to provide permission inheritance.
+ */
 
+use \Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_entity_type_build().
+ */
+function role_inheritance_entity_type_build(array &$entity_types) {
+  // Override entity storage class for user_role to allow for role inheritance
+  // during $user->hasPermission() (by altering isPermissionInRoles()).
   $entity_types['user_role']->setStorageClass('Drupal\role_inheritance\RoleInheritanceStorage');
-  //$entity_types['user_role']->setClass('Drupal\role_inheritance\RoleInheritanceUser');
 }
 
 /**
- * Helper Function for RoleInheritanceStorage class to extend based in inheritance
+ * Helper Function for RoleInheritanceStorage class.
+ *
+ * Extends a list of role ids to include inherited ids.
  */
-function _role_inheritance_extendroles($rids){
+function _role_inheritance_extendroles($rids) {
   static $i = 0;
-  $collapsed = _role_inheritance_roleMap(NULL, true);
+  $collapsed = _role_inheritance_role_map(NULL, TRUE);
   $extended = $rids;
-  if($collapsed){
-    foreach ($rids as $role){
-      if(in_array($role, array_keys($collapsed))){
+  if ($collapsed) {
+    foreach ($rids as $role) {
+      if (in_array($role, array_keys($collapsed))) {
         $extended = array_merge($extended, $collapsed[$role]);
       }
     }
@@ -28,34 +36,58 @@ function _role_inheritance_extendroles($rids){
   return $extended;
 }
 
-function _role_inheritance_roleMap_collpase($map, $collapse = array(), $role = NULL) {
+/**
+ * Helper function for _role_inheritance_role_map().
+ *
+ * Helper function to collapse role relations when applying inheritance. Result
+ * of this function is an associtive array of a role to the direct and indirect
+ * roles it inherits from. Indirect inheirted roles are those that one a role's
+ * direct inheirted roles inheirts from that the parent role does not.
+ *
+ * EX. Admin inheirts from Global Editor. And Global Editor inheirts from
+ * Writer. These are direct inheirtance. Admin also inherits from Writer by
+ * proxy through Global Editor. This relation is indirect inheritance.
+ *
+ * @param array $map
+ *   Original direct role inheirtance mapping.
+ * @param array $collapse
+ *   Mapping of collapsed roles to append new data onto.
+ * @param string $role
+ *   Optional role id to process inheirtance of.
+ */
+function _role_inheritance_role_map_collpase($map, $collapse = array(), $role = NULL) {
   if ($role != NULL) {
     if (in_array($role, array_keys($map))) {
       $collapse[$role] = $map[$role];
-    } else {
+    }
+    else {
       $collapse[$role] = array();
     }
 
     foreach ($map[$role] as $id) {
       if (in_array($id, array_keys($map))) {
         if (!in_array($id, array_keys($collapse))) {
-          $collapse = _role_inheritance_roleMap_collpase($map, $collapse, $id);
+          $collapse = _role_inheritance_role_map_collpase($map, $collapse, $id);
         }
-        $collapse[$role] = array_merge($collapse[$role],$collapse[$id]);
+        $collapse[$role] = array_merge($collapse[$role], $collapse[$id]);
       }
     }
 
-  } else {
+  }
+  else {
     foreach ($map as $id => $inherit) {
-      if(!in_array($id, array_keys($collapse))) {
-        $collapse = _role_inheritance_roleMap_collpase($map, $collapse, $id);
+      if (!in_array($id, array_keys($collapse))) {
+        $collapse = _role_inheritance_role_map_collpase($map, $collapse, $id);
       }
     }
   }
   return $collapse;
 }
 
-function _role_inheritance_roleMap($updateMap = NULL, $collapse = false) {
+/**
+ * Store and retrieve the role inheritance mapping.
+ */
+function _role_inheritance_role_map($updateMap = NULL, $collapse = FALSE) {
   static $roleMap;
   static $roleMapCollapse;
 
@@ -66,9 +98,10 @@ function _role_inheritance_roleMap($updateMap = NULL, $collapse = false) {
     $config->set('role_map', $roleMap);
     $config->save();
 
-    $roleMapCollapse = _role_inheritance_roleMap_collpase($roleMap);
+    $roleMapCollapse = _role_inheritance_role_map_collpase($roleMap);
 
-  } else if (!$roleMap) {
+  }
+  elseif (!$roleMap) {
     $config = \Drupal::service('config.factory')->getEditable('role_inheritance.settings');
     $roleMap = $config->get('role_map');
 
@@ -79,24 +112,30 @@ function _role_inheritance_roleMap($updateMap = NULL, $collapse = false) {
       $config->save();
     }
 
-    $roleMapCollapse = _role_inheritance_roleMap_collpase($roleMap);
+    $roleMapCollapse = _role_inheritance_role_map_collpase($roleMap);
   }
 
   if ($collapse) {
     return $roleMapCollapse;
-  } else {
+  }
+  else {
     return $roleMap;
   }
 }
 
-function role_inheritance_form_user_role_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Adds role inheirtance options to role edit/creation form.
+ */
+function role_inheritance_form_user_role_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $role_names = array();
   foreach (user_roles() as $role_name => $role) {
     // Retrieve role names for columns.
     $role_names[$role_name] = $role->label();
   }
 
-  $role_mapping = _role_inheritance_roleMap();
+  $role_mapping = _role_inheritance_role_map();
 
   if (isset($form['id']) && isset($form['id']['#default_value']) && $form['id']['#default_value']) {
     $inherits = $role_mapping[$form['id']['#default_value']];
@@ -116,13 +155,16 @@ function role_inheritance_form_user_role_form_alter(&$form, \Drupal\Core\Form\Fo
   $form['actions']['submit']['#submit'][] = 'role_inheritance_form_user_role_form_submit';
 }
 
-function role_inheritance_form_user_role_form_submit(&$form, \Drupal\Core\Form\FormStateInterface $form_state){
+/**
+ * Handle submission of user form to save role Inheirtance data.
+ */
+function role_inheritance_form_user_role_form_submit(&$form, FormStateInterface $form_state) {
 
-    $values = $form_state->getValues();
-    $roles = array_keys(user_roles());
+  $values = $form_state->getValues();
+  $roles = array_keys(user_roles());
 
-    $mapping = _role_inheritance_roleMap();
-    $mapping[$values['id']] = array_filter($values['inheritance']);
+  $mapping = _role_inheritance_role_map();
+  $mapping[$values['id']] = array_filter($values['inheritance']);
 
-    _role_inheritance_roleMap($mapping);
+  _role_inheritance_role_map($mapping);
 }
