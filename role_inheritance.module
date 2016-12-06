@@ -89,7 +89,7 @@ function _role_inheritance_role_map_collpase($map, $collapse = array(), $role = 
  */
 function _role_inheritance_role_map($updateMap = NULL, $collapse = FALSE) {
   static $roleMap;
-  static $roleMapCollapse;
+  static $collapsedRoleMap;
 
   if ($updateMap) {
     $roleMap = array_filter($updateMap);
@@ -98,7 +98,7 @@ function _role_inheritance_role_map($updateMap = NULL, $collapse = FALSE) {
     $config->set('role_map', $roleMap);
     $config->save();
 
-    $roleMapCollapse = _role_inheritance_role_map_collpase($roleMap);
+    $collapsedRoleMap = NULL;
 
   }
   elseif (!$roleMap) {
@@ -112,11 +112,14 @@ function _role_inheritance_role_map($updateMap = NULL, $collapse = FALSE) {
       $config->save();
     }
 
-    $roleMapCollapse = _role_inheritance_role_map_collpase($roleMap);
+    $collapsedRoleMap = NULL;
   }
 
   if ($collapse) {
-    return $roleMapCollapse;
+    if ($collapsedRoleMap === NULL) {
+      $collapsedRoleMap = _role_inheritance_role_map_collpase($roleMap);
+    }
+    return $collapsedRoleMap;
   }
   else {
     return $roleMap;
