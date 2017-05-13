@@ -6,6 +6,7 @@
  */
 
 use \Drupal\Core\Form\FormStateInterface;
+use \Drupal\Core\Entity\EntityInterface
 
 /**
  * Implements hook_entity_type_build().
@@ -20,8 +21,16 @@ function role_inheritance_entity_type_build(array &$entity_types) {
  * Helper Function for RoleInheritanceStorage class.
  *
  * Extends a list of role ids to include inherited ids.
+ *
+ * @param array $rids
+ *   list of role ids to find inheritance of.
+ * @param bool $inclusive
+ *   Whether to include the values of $rids in the returned list.
+ *
+ * @return array
+ *   list of role ids inherited from $rids.
  */
-function _role_inheritance_extendroles($rids) {
+function _role_inheritance_extendroles($rids, $inclusive = true) {
   static $i = 0;
   $collapsed = _role_inheritance_role_map(NULL, TRUE);
   $extended = $rids;
@@ -33,7 +42,11 @@ function _role_inheritance_extendroles($rids) {
     }
   }
 
-  return $extended;
+  if ($inclusive) {
+    return $extended;
+  } else {
+    return array_diff($extended, $rids);
+  }
 }
 
 /**
@@ -54,6 +67,10 @@ function _role_inheritance_extendroles($rids) {
  *   Mapping of collapsed roles to append new data onto.
  * @param string $role
  *   Optional role id to process inheirtance of.
+ *
+ * @return array
+ *   Single dementional array where keys are mapped to a list of all roles they
+ *   inherit from.
  */
 function _role_inheritance_role_map_collpase($map, $collapse = array(), $role = NULL) {
   if ($role != NULL) {
@@ -170,4 +187,47 @@ function role_inheritance_form_user_role_form_submit(&$form, FormStateInterface 
   $mapping[$values['id']] = array_filter($values['inheritance']);
 
   _role_inheritance_role_map($mapping);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_load().
+ *
+ * Extends the user role list when its being retrieved from the database. This
+ * allows for better compatibility with modules that check user access but do
+ * not rely on permissions to do so.
+ *
+ * As these extra roles are only temporary, we need to remove these additional
+ * roles using hook_ENTITY_TYPE_presave.
+ *
+ * @see role_inheritance_user_presave()
+ */
+function role_inheritance_user_load($users) {
+  foreach ($users as $uid => $user) {
+    $rids = $user->getRoles();
+    $extended = _role_inheritance_extendroles($rids, false);
+    // store the list of extra roles so we can remove them.
+    $user->_role_inheritance_extended_roles = $extended;
+    foreach ($extended as $role) {
+      $user->addRole($role);
+    }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ *
+ * Removed inheirted roles that were added in role_inheritance_user_load() so
+ * they don't get saved to the database and permenetly added to the user.
+ *
+ * @see role_inheritance_user_load()
+ */
+function role_inheritance_user_presave(EntityInterface $user) {
+  // check if user has extended roles. IF so remove them.
+  if (isset($user->_role_inheritance_extended_roles)) {
+    $rids = $user->_role_inheritance_extended_roles;
+    foreach ($rids as $role) {
+      $user->removeRole($role);
+    }
+    unset($user->_role_inheritance_extended_roles);
+  }
 }
