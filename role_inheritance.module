@@ -271,3 +271,78 @@ function role_inheritance_form_user_form_submit($form, FormStateInterface $form_
     $user->_role_inheritance_extended_roles = array_diff($user->_role_inheritance_extended_roles, $submitted_roles);
   }
 }
+
+/**
+ * Simplify a list of roles, to remove roles that inherit from others.
+ *
+ * Removes roles that inherit from one or more roles in the list, to provide
+ * the smallest list of roles needed to achieve the same list via inheirtance.
+ *
+ * @see _sp_mirgrate_find_parents()
+ *
+ * @param array $roles
+ *   A list of roles reduce.
+ *
+ * @return array
+ *   $roles minus any roles that inheirt from others in the list.
+ */
+function _role_inheritance_find_children($roles) {
+  $inheritanceMap = _role_inheritance_role_map();
+  $inheritanceMapCollapsed = _role_inheritance_role_map(NULL, TRUE);
+
+  $providable_roles = $roles;
+  $removable_roles = $roles;
+
+  foreach ($providable_roles as $providable_role) {
+    // If source role, is not already removed
+    if (in_array($providable_role, $roles)) {
+      foreach ($removable_roles as $removable_role) {
+        if ($providable_role !== $removable_role                                        // Don't remove current role.
+            && ($key = array_search($removable_role, $roles)) !== false             // If target role, is not already removed.
+            && in_array($providable_role, $inheritanceMapCollapsed[$removable_role])) { // And removable_role grants providable_role
+          unset($roles[$key]);  // Remove target role.
+        }
+      }
+    }
+  }
+
+  return $roles;
+}
+
+/**
+ * Simplify a list of roles, to remove roles that are inherited from others.
+ *
+ * Removes child roles from the list if another role in the list inheirts that
+ * role, to provide the list of parents that contains or inherits all roles in
+ * the original list.
+ *
+ * @see _role_inheritance_find_children()
+ *
+ * @param array $roles
+ *   A list of roles reduce.
+ *
+ * @return array
+ *   $roles minus any roles inherted by others in the list.
+ */
+function _sp_mirgrate_find_parents($roles) {
+  $inheritanceMap = _role_inheritance_role_map();
+  $inheritanceMapCollapsed = _role_inheritance_role_map(NULL, TRUE);
+
+  $providers = $roles;
+  $removable_roles = $roles;
+
+  foreach ($providers as $provider_role) {
+    // If source role, is not already removed
+    if (in_array($provider_role, $roles)) {
+      foreach ($removable_roles as $removable_role) {
+        if ($provider_role !== $removable_role                                        // Don't remove current role.
+            && ($key = array_search($removable_role, $roles)) !== false             // If target role, is not already removed.
+            && in_array($removable_role, $inheritanceMapCollapsed[$provider_role])) { // And provider_role grants removable_role
+          unset($roles[$key]);  // Remove target role.
+        }
+      }
+    }
+  }
+
+  return $roles;
+}
