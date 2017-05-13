@@ -231,3 +231,43 @@ function role_inheritance_user_presave(EntityInterface $user) {
     unset($user->_role_inheritance_extended_roles);
   }
 }
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Since role list is populated from $user->getRoles and we add inherited roles
+ * in role_inheritance_user_load(), we need to remove these from the selected
+ * list of roles.
+ *
+ * @see role_inheritance_user_load()
+ */
+function role_inheritance_form_user_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $user = $form_state->getFormObject()->getEntity();
+  if (isset($form["account"]["roles"]["#default_value"]) && isset($user->_role_inheritance_extended_roles)) {
+    $form["account"]["roles"]["#default_value"] = array_diff($form["account"]["roles"]["#default_value"], $user->_role_inheritance_extended_roles);
+
+    // set submission handler.
+    array_unshift($form['actions']['submit']['#submit'], 'role_inheritance_form_user_form_submit');
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * When form is submitted, we want to remove any newly added roles from the
+ * list of inherited roles the user has, so that the new role will not get
+ * removed by role_inheritance_user_presave and will acually get saved.
+ *
+ * @see role_inheritance_user_load()
+ * @see role_inheritance_user_presave()
+ * @see role_inheritance_form_user_form_alter()
+ */
+function role_inheritance_form_user_form_submit($form, FormStateInterface $form_state) {
+  $values = $form_state->getValues();
+  $user = $form_state->getFormObject()->getEntity();
+  if (isset($values['roles']) && isset($user->_role_inheritance_extended_roles)) {
+    $submitted_roles = $values['roles'];
+    // remove roles that were just added from extended role list.
+    $user->_role_inheritance_extended_roles = array_diff($user->_role_inheritance_extended_roles, $submitted_roles);
+  }
+}
