@@ -5,9 +5,10 @@
  * Module to provide permission inheritance.
  */
 
-use \Drupal\Core\Form\FormStateInterface;
-use \Drupal\Core\Entity\EntityInterface;
-use \Drupal\user\Entity\Role;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\user\Entity\Role;
 
 /**
  * Implements hook_entity_type_build().
@@ -211,7 +212,10 @@ function role_inheritance_user_load($users) {
     // store the list of extra roles so we can remove them.
     $user->_role_inheritance_extended_roles = $extended;
     foreach ($extended as $role) {
-      $user->addRole($role);
+      if ($role != AccountInterface::AUTHENTICATED_ROLE
+          && $role !== AccountInterface::ANONYMOUS_ROLE) {
+        $user->addRole($role);
+      }
     }
   }
 }
