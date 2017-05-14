@@ -4,6 +4,7 @@ namespace Drupal\role_inheritance\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
 
 /**
  * Contribute form.
@@ -72,6 +73,15 @@ class RoleInheritanceAdminForm extends FormBase {
 
           if (isset($role_mapping[$rid]) && in_array($srid, $role_mapping[$rid])) {
             $form['inheritance'][$rid][$srid]['#default_value'] = 1;
+          }
+
+          // Admin inherits from everyone, and everyone inherites from authenticated.
+          // This is how core handles permissions, so we should too.
+          if ($role->isAdmin()
+              || ($srid == AccountInterface::AUTHENTICATED_ROLE
+                  && $rid !== AccountInterface::ANONYMOUS_ROLE)) {
+            $form['inheritance'][$rid][$srid]["#default_value"] = 1;
+            $form['inheritance'][$rid][$srid]["#disabled"] = true;
           }
         }
       }

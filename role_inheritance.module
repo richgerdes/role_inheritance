@@ -7,6 +7,7 @@
 
 use \Drupal\Core\Form\FormStateInterface;
 use \Drupal\Core\Entity\EntityInterface;
+use \Drupal\user\Entity\Role;
 
 /**
  * Implements hook_entity_type_build().
@@ -86,7 +87,7 @@ function _role_inheritance_role_map_collpase($map, $collapse = array(), $role = 
         if (!in_array($id, array_keys($collapse))) {
           $collapse = _role_inheritance_role_map_collpase($map, $collapse, $id);
         }
-        $collapse[$role] = array_merge($collapse[$role], $collapse[$id]);
+        $collapse[$role] = array_unique(array_merge($collapse[$role], $collapse[$id]));
       }
     }
 
@@ -171,6 +172,8 @@ function role_inheritance_form_user_role_form_alter(&$form, FormStateInterface $
     '#default_value' => isset($inherits) ? $inherits : array(),
     '#description' => t('Select the roles that this role should inherit permission grants from.'),
   );
+
+  // @TODO enfore inheritance from authenticated and that admin roles inheirt all.
 
   $form['actions']['submit']['#submit'][] = 'role_inheritance_form_user_role_form_submit';
 }
@@ -345,4 +348,39 @@ function _sp_mirgrate_find_parents($roles) {
   }
 
   return $roles;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Require the js script to show role inheirtance on the permissions table, and setup automation
+ */
+function role_inheritance_form_user_admin_permissions_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $inheritanceMapCollapsed = _role_inheritance_role_map(NULL, TRUE);
+  $inheritedPermissions = array();    // mapping of each permission for a role, and what roles they are inherited from.
+  $providers = array();              // mapping of a role and what role inheirt from it.
+
+  foreach ($inheritanceMapCollapsed as $rid => $inheirt_from) {
+    foreach ($inheirt_from as $provider) {
+      $providers[$provider][] = $rid;
+
+      $role = Role::load($provider);
+      if ($role === null) {
+        continue;
+      }
+
+      $provider_permissions = $role->getPermissions();
+      foreach ($provider_permissions as $permission) {
+        $inheritedPermissions[$rid][$permission][] = $provider;
+      }
+    }
+  }
+
+  // Remove user.permissions library since it, just provides inheritcance of
+  // the authenticated user role by all other roles.
+  $form['#attached']['library'] = array_diff($form['#attached']['library'], array('user/drupal.user.permissions'));
+  $form['#attached']['library'][] = 'role_inheritance/role_inheritance.permissions';
+  $form['#attached']['drupalSettings']['role_inheritance']['map'] = $inheritanceMapCollapsed;
+  $form['#attached']['drupalSettings']['role_inheritance']['inherited'] = $inheritedPermissions;
+  $form['#attached']['drupalSettings']['role_inheritance']['providers'] = $providers;
 }
