@@ -1,0 +1,26 @@
+<?php
+
+/**
+ * Implements hook_install().
+ *
+ * On installation, add default permissions.
+ *   - All authenticated roles, inheirit authenticated,
+ *   - Admin roles inherit all roles.
+ */
+function role_inheritance_install() {
+  $map = _role_inheritance_role_map();
+  $roles = user_roles();
+  foreach ($roles as $rid => $role) {
+    if ($rid !== AccountInterface::ANONYMOUS_ROLE) {
+      $map[$rid][]  = AccountInterface::AUTHENTICATED_ROLE;
+    }
+    if ($role->isAdmin()) {
+      foreach ($roles as $srid => $srole) {
+        if ($rid !== AccountInterface::AUTHENTICATED_ROLE) {
+          $map[$rid][] = $srid
+        }
+      }
+    }
+  }
+  _role_inheritance_role_map($map);
+}

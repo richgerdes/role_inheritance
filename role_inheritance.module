@@ -194,6 +194,40 @@ function role_inheritance_form_user_role_form_submit(&$form, FormStateInterface 
 }
 
 /**
+ * Implements hook_form_FORM_ID_insert().
+ *
+ * When adding a new role, we should set the default inheiritance for that role.
+ */
+function role_inheritance_form_user_role_insert(Drupal\Core\Entity\EntityInterface $newRole) {
+  $map = _role_inheritance_role_map();
+  $map[$newRole->id()] = [AccountInterface::AUTHENTICATED_ROLE];
+  $roles = user_roles();
+  foreach ($roles as $rid => $role) {
+    if ($role->isAdmin()) {
+      $map[$rid][] = $newRole->id();
+    }
+  }
+  _role_inheritance_role_map($map);
+}
+
+/**
+ * Implements hook_user_role_delete().
+ *
+ * When deleting a role, cleanup inheirtance map.
+ */
+function role_inheritance_form_user_role_delete(Drupal\Core\Entity\EntityInterface $role) {
+  $map = _role_inheritance_role_map();
+  $removed_id = $role->id();
+  foreach ($map as $rid => $inherited) {
+    $map[$rid] = array_diff($inherited, [$removed_id]);
+  }
+  if (isset($map[$removed_id])) {
+    unset($map[$removed_id]);
+  }
+  _role_inheritance_role_map($map);
+}
+
+/**
  * Implements hook_ENTITY_TYPE_load().
  *
  * Extends the user role list when its being retrieved from the database. This
