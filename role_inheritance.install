@@ -17,7 +17,7 @@ function role_inheritance_install() {
     if ($role->isAdmin()) {
       foreach ($roles as $srid => $srole) {
         if ($rid !== AccountInterface::AUTHENTICATED_ROLE) {
-          $map[$rid][] = $srid
+          $map[$rid][] = $srid;
         }
       }
     }
