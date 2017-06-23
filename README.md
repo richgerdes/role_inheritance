@@ -20,4 +20,4 @@ priv only needs to be assigned to *Writers* and the other two roles will inherit
 all their access.
 
 When incorperated with Workbench Access or Taxaonomy Access Control, Roles can
-inheirt thses accesses privs as well to define access over sections and content.
+inherit thses accesses privs as well to define access over sections and content.
