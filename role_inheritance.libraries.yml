@@ -12,6 +12,9 @@ role_inheritance.mapping:
   version: VERSION
   js:
     js/role_inheritance.mapping.js: {}
+  css:
+    component:
+      css/role_inheritance.mapping.css: {}
   dependencies:
     - core/jquery
     - core/jquery.once

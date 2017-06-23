@@ -59,7 +59,7 @@ class RoleInheritanceAdminForm extends FormBase {
           'title' => $role->label(),
         ),
         '#wrapper_attributes' => array(
-          'class' => array('rid-' . $rid, 'js-rid-' . $rid),
+          'class' => array('ri-row-description', 'rid-' . $rid, 'js-rid-' . $rid),
         ),
       );
       foreach ($roles as $srid => $srole) {
@@ -68,7 +68,7 @@ class RoleInheritanceAdminForm extends FormBase {
             '#type' => 'inline_template',
             '#template' => 'X',
             '#wrapper_attributes' => array(
-              'style' => array('text-align:center;'),
+              'class' => array('ri-no-inheritance'),
             ),
           );
         }

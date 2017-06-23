@@ -177,7 +177,6 @@
     var checkbox = this;
     var $checkbox = $(checkbox);
 
-    var title = "";
     var isInherited = false;
     if ($checkbox.hasClass("js-ri-inherited")) {
       isInherited = true;
@@ -186,7 +185,6 @@
     console.log($checkbox.siblings(".js-ri-disabled"));
     $checkbox.siblings(".js-ri-disabled").each(function () {
       this.style.display = (isInherited) ? '' : 'none';
-      this.title = title;
     });
   };
 
