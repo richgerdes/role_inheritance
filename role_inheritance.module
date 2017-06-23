@@ -362,7 +362,7 @@ function role_inheritance_form_role_delegation_role_assign_form_submit($form, Fo
  * Removes roles that inherit from one or more roles in the list, to provide
  * the smallest list of roles needed to achieve the same list via inheritance.
  *
- * @see _sp_mirgrate_find_parents()
+ * @see _role_inheritance_find_parents()
  *
  * @param array $roles
  *   A list of roles reduce.
