@@ -113,7 +113,7 @@
         }
       }
 
-      // Copy any inheirted data.
+      // Copy any inherited data.
       for (var id in map[role]) {
         var inherit = map[role][id];
         if (inherit in map) {
@@ -144,7 +144,7 @@
   }
 
   /**
-   * Check inheirtance state and managed inheirted class.
+   * Check inheritance state and managed inherited class.
    */
   function setState() {
     var checkbox = this;
@@ -255,7 +255,7 @@
     },
 
     /**
-     * Call back for onclick to update inheirtance.
+     * Call back for onclick to update inheritance.
      *
      * When a checkbox is changed, the inheritance mapping gets updated and
      * relevant checkboxes get updated to reflect the change. Each inherited

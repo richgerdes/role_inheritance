@@ -114,18 +114,18 @@ class RoleInheritanceAdminForm extends FormBase {
       '#button_type' => 'primary',
     );
 
-    // mapping of a role and what roles inheirt from it.
+    // mapping of a role and what roles inherit from it.
     $role_mapping_providers = array();
     $role_mapping_providers_collapsed = array();
 
-    foreach ($role_mapping as $rid => $inheirt_from) {
-      foreach ($inheirt_from as $provider) {
+    foreach ($role_mapping as $rid => $inherit_from) {
+      foreach ($inherit_from as $provider) {
         $role_mapping_providers[$provider][] = $rid;
       }
     }
 
-    foreach ($role_mapping_collapsed as $rid => $inheirt_from) {
-      foreach ($inheirt_from as $provider) {
+    foreach ($role_mapping_collapsed as $rid => $inherit_from) {
+      foreach ($inherit_from as $provider) {
         $role_mapping_providers_collapsed[$provider][] = $rid;
       }
     }

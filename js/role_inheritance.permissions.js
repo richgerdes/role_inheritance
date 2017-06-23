@@ -20,14 +20,14 @@
   };
 
   /**
-   * Update the display state of the field to reflect inheirted permissions.
+   * Update the display state of the field to reflect inherited permissions.
    *
    * If the permission is inherited from one or more roles, then the checkbox
    * should be replaced with the dummy checkbox and the label should be set.
    * Otherwise, only the original checkbox should be visible.
    */
   function setState() {
-    var inheirtedPermissions = drupalSettings.role_inheritance.inherited;
+    var inheritedPermissions = drupalSettings.role_inheritance.inherited;
 
     var checkbox = this;
     var $checkbox = $(checkbox);
@@ -35,8 +35,8 @@
     var permission = $checkbox.data("ri-permission");
 
     var providers = [];
-    if (role in inheirtedPermissions && permission in inheirtedPermissions[role]) {
-      providers = inheirtedPermissions[role][permission];
+    if (role in inheritedPermissions && permission in inheritedPermissions[role]) {
+      providers = inheritedPermissions[role][permission];
     }
     console.log(providers);
     var title = "";
@@ -45,7 +45,7 @@
       // This permission is not inherited from any roles.
       inherited = false;
     } else {
-      // This permission is inheirted from 1+ roles.
+      // This permission is inherited from 1+ roles.
       inherited = true;
       title = "This permission is inherited from ";
       if (providers.length == 1) {
@@ -135,14 +135,14 @@
     },
 
     /**
-     * Call back for onclick to update inheirtance.
+     * Call back for onclick to update inheritance.
      *
      * When a checkbox is changed, the inheritance mapping gets updated and
-     * relevant checkboxes get updated to reflect the change. Each inheirted
+     * relevant checkboxes get updated to reflect the change. Each inherited
      * permission checkbox gets passed to setState so it can be updated.
      */
     toggle: function () {
-      var inheirtedPermissions = drupalSettings.role_inheritance.inherited;
+      var inheritedPermissions = drupalSettings.role_inheritance.inherited;
       var providerMap = drupalSettings.role_inheritance.providers;
 
       var $clickedCheckbox = $(this);
@@ -157,18 +157,18 @@
           var inherited = providerMap[role][i];
 
           // Add array property if it does not exist.
-          if (!(inherited in inheirtedPermissions)) {
-            inheirtedPermissions[inherited] = {};
+          if (!(inherited in inheritedPermissions)) {
+            inheritedPermissions[inherited] = {};
           }
-          if (!(permission in inheirtedPermissions[inherited])) {
-            inheirtedPermissions[inherited][permission] = [];
+          if (!(permission in inheritedPermissions[inherited])) {
+            inheritedPermissions[inherited][permission] = [];
           }
 
           // Add or remove this role from the inheritance map.
-          if (isChecked && inheirtedPermissions[inherited][permission].indexOf(role) < 0) {
-            inheirtedPermissions[inherited][permission].push(role);
+          if (isChecked && inheritedPermissions[inherited][permission].indexOf(role) < 0) {
+            inheritedPermissions[inherited][permission].push(role);
           } else {
-            inheirtedPermissions[inherited][permission].splice(inheirtedPermissions[inherited][permission].indexOf(role), 1);
+            inheritedPermissions[inherited][permission].splice(inheritedPermissions[inherited][permission].indexOf(role), 1);
           }
 
           // Update all the inherited fields.
