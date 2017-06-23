@@ -94,6 +94,10 @@
           $ancestor = $table.prev();
           method = 'after';
         }
+        else if ($table.next().length) {
+          $ancestor = $table.next();
+          method = 'before';
+        }
         else {
           $ancestor = $table.parent();
           method = 'append';

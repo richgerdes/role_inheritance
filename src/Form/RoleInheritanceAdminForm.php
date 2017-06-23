@@ -25,6 +25,15 @@ class RoleInheritanceAdminForm extends FormBase {
     $roles = user_roles();
 
     $role_mapping = _role_inheritance_role_map();
+    $role_mapping_collapsed = _role_inheritance_role_map(NULL, TRUE);
+
+    $form["info"] = array(
+      '#type' => 'inline_template',
+      '#template' => '<div class="role"><span class="title">{{ title }}</span></div>',
+      '#context' => array(
+        'title' => "Configure inheritance of permissions and access from one role to another. Roles in the left column will inherit permissions from roles in the top row.",
+      ),
+    );
 
     $form['inheritance'] = array(
       '#type' => 'table',
@@ -42,20 +51,25 @@ class RoleInheritanceAdminForm extends FormBase {
     }
 
     foreach ($roles as $rid => $role) {
-      // Fill in default values for the permission.
+      // Fill in default values for the role.
       $form['inheritance'][$rid]['description'] = array(
         '#type' => 'inline_template',
-        '#template' => '<div class="permission"><span class="title">{{ title }}</span></div>',
+        '#template' => '<div class="role"><span class="title">{{ title }}</span></div>',
         '#context' => array(
           'title' => $role->label(),
+        ),
+        '#wrapper_attributes' => array(
+          'class' => array('rid-' . $rid, 'js-rid-' . $rid),
         ),
       );
       foreach ($roles as $srid => $srole) {
         if ($srid == $rid) {
           $form['inheritance'][$rid][$srid] = array(
             '#type' => 'inline_template',
-            '#template' => '<center>X</center>',
-            '#style' => 'text-align:center;',
+            '#template' => 'X',
+            '#wrapper_attributes' => array(
+              'style' => array('text-align:center;'),
+            ),
           );
         }
         else {
@@ -67,12 +81,18 @@ class RoleInheritanceAdminForm extends FormBase {
             ),
             '#type' => 'checkbox',
             '#default_value' => 0,
-            '#attributes' => array('class' => array('rid-' . $srid, 'js-rid-' . $srid)),
+            '#attributes' => array(
+              'class' => array('rid-' . $srid, 'js-rid-' . $srid),
+              'data-ri-role' => $rid,
+              'data-ri-inherits' => $srid,
+            ),
             '#parents' => array($rid, $srid),
           );
 
           if (isset($role_mapping[$rid]) && in_array($srid, $role_mapping[$rid])) {
             $form['inheritance'][$rid][$srid]['#default_value'] = 1;
+          } elseif (isset($role_mapping_collapsed[$rid]) && in_array($srid, $role_mapping_collapsed[$rid])) {
+            $form['inheritance'][$rid][$srid]['#attributes']['class'][] = "js-ri-inherited";
           }
 
           // Admin inherits from everyone, and everyone inherites from authenticated.
@@ -93,6 +113,29 @@ class RoleInheritanceAdminForm extends FormBase {
       '#value' => $this->t('Save permissions'),
       '#button_type' => 'primary',
     );
+
+    // mapping of a role and what roles inheirt from it.
+    $role_mapping_providers = array();
+    $role_mapping_providers_collapsed = array();
+
+    foreach ($role_mapping as $rid => $inheirt_from) {
+      foreach ($inheirt_from as $provider) {
+        $role_mapping_providers[$provider][] = $rid;
+      }
+    }
+
+    foreach ($role_mapping_collapsed as $rid => $inheirt_from) {
+      foreach ($inheirt_from as $provider) {
+        $role_mapping_providers_collapsed[$provider][] = $rid;
+      }
+    }
+
+    // Add js to disable inherited permissions.
+    $form['#attached']['library'][] = 'role_inheritance/role_inheritance.mapping';
+    $form['#attached']['drupalSettings']['role_inheritance']['map'] = $role_mapping;
+    $form['#attached']['drupalSettings']['role_inheritance']['map_collapsed'] = $role_mapping_collapsed;
+    $form['#attached']['drupalSettings']['role_inheritance']['providers'] = $role_mapping_providers;
+    $form['#attached']['drupalSettings']['role_inheritance']['providers_collapsed'] = $role_mapping_providers_collapsed;
 
     return $form;
   }

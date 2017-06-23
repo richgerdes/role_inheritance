@@ -1,10 +1,19 @@
 role_inheritance.permissions:
   version: VERSION
   js:
-    js/role_inheritance.js: {}
+    js/role_inheritance.permissions.js: {}
   dependencies:
     - core/jquery
     - core/jquery.once
     - core/drupal
     - core/drupalSettings
     - user/drupal.user.admin
+role_inheritance.mapping:
+  version: VERSION
+  js:
+    js/role_inheritance.mapping.js: {}
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupalSettings

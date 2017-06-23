@@ -4,4 +4,4 @@ role_inheritance.config_role_inheritance:
     _form: '\Drupal\role_inheritance\Form\RoleInheritanceAdminForm'
     _title: 'Role Inheritance'
   requirements:
-    _permission: 'access content'
+    _permission: 'administer permissions'
