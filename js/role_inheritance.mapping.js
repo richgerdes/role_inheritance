@@ -1,6 +1,6 @@
 /**
  * @file
- * User permission page behaviors.
+ * Role inheritance mapping page behaviors.
  */
 
 (function ($, Drupal) {
@@ -17,7 +17,7 @@
     var permission_css = permission.replace(/[_ ]/g, "-");
     var id_string = "#edit-" + role_css + "-" + permission_css;
     return id_string;
-  };
+  }
 
   /**
    * Update direct mapping and rebuild effected data.
@@ -108,7 +108,7 @@
       collapse[role] = [];
       if (role in map) {
         // copy data from the map.
-        for (r in map[role]) {
+        for (var r in map[role]) {
           collapse[role].push(map[role][r]);
         }
       }
@@ -123,9 +123,9 @@
           }
           // Copy collapsed role mapping for inherited roles.
           for (var ind in collapse[inherit]) {
-            var r = collapse[inherit][ind];
-            if ($.inArray(r, collapse[role]) == -1) {
-              collapse[role].push(r);
+            var ir = collapse[inherit][ind];
+            if ($.inArray(ir, collapse[role]) == -1) {
+              collapse[role].push(ir);
             }
           }
         }
@@ -164,7 +164,7 @@
     }
 
     $checkbox.each(updateDisplay);
-  };
+  }
 
   /**
    * Update the display state of the field to reflect inherited permissions.
@@ -186,7 +186,7 @@
     $checkbox.siblings(".js-ri-disabled").each(function () {
       this.style.display = (isInherited) ? '' : 'none';
     });
-  };
+  }
 
   /**
    * Shows checked and disabled checkboxes for inherited permissions.
