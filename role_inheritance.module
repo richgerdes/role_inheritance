@@ -408,7 +408,7 @@ function _role_inheritance_find_children($roles) {
  * @return array
  *   $roles minus any roles inherted by others in the list.
  */
-function _sp_mirgrate_find_parents($roles) {
+function _role_inheritance_find_parents($roles) {
   $inheritanceMap = _role_inheritance_role_map();
   $inheritanceMapCollapsed = _role_inheritance_role_map(NULL, TRUE);
 
