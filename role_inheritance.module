@@ -180,7 +180,7 @@ function role_inheritance_form_user_role_form_alter(&$form, FormStateInterface $
 }
 
 /**
- * Handle submission of user form to save role Inheirtance data.
+ * Handle submission of user form to save role inheritance data.
  */
 function role_inheritance_form_user_role_form_submit(&$form, FormStateInterface $form_state) {
 
@@ -196,7 +196,7 @@ function role_inheritance_form_user_role_form_submit(&$form, FormStateInterface 
 /**
  * Implements hook_form_FORM_ID_insert().
  *
- * When adding a new role, we should set the default inheiritance for that role.
+ * When adding a new role, we should set the default inheritance for that role.
  */
 function role_inheritance_form_user_role_insert(Drupal\Core\Entity\EntityInterface $newRole) {
   $map = _role_inheritance_role_map();
@@ -357,20 +357,22 @@ function role_inheritance_form_role_delegation_role_assign_form_submit($form, Fo
 }
 
 /**
- * Simplify a list of roles, to remove roles that inherit from others.
+ * Simplify a list of roles, to remove roles that receive inherited info.
  *
- * Removes roles that inherit from one or more roles in the list, to provide
- * the smallest list of roles needed to achieve the same list via inheritance.
+ * Removes roles from the list if one or more roles inherit form the role.
  *
- * @see _role_inheritance_find_parents()
+ * Usage Example: Content only needs to have lowest roles in the tree, and
+ * through role inheritance, the other roles higher will be provided.
+ *
+ * @see _role_inheritance_remove_inherited()
  *
  * @param array $roles
  *   A list of roles reduce.
  *
  * @return array
- *   $roles minus any roles that inherit from others in the list.
+ *   $roles minus any roles inherted by others in the list.
  */
-function _role_inheritance_find_children($roles) {
+function _role_inheritance_remove_receivers($roles) {
   $inheritanceMap = _role_inheritance_role_map();
   $inheritanceMapCollapsed = _role_inheritance_role_map(NULL, TRUE);
 
@@ -396,19 +398,22 @@ function _role_inheritance_find_children($roles) {
 /**
  * Simplify a list of roles, to remove roles that are inherited from others.
  *
- * Removes child roles from the list if another role in the list inherits that
- * role, to provide the list of parents that contains or inherits all roles in
- * the original list.
+ * Removes roles that are inherited from one or more roles in the original role
+ * list, to provide the smallest list of roles needed to achieve the same list
+ * when inheritance is applied.
  *
- * @see _role_inheritance_find_children()
+ * Usage Example: Users only need the highest roles in a tree, and via role
+ * inheritance roles below those will also be given to the user.
+ *
+ * @see _role_inheritance_remove_providers()
  *
  * @param array $roles
  *   A list of roles reduce.
  *
  * @return array
- *   $roles minus any roles inherted by others in the list.
+ *   $roles minus any roles that inherit from others in the list.
  */
-function _role_inheritance_find_parents($roles) {
+function _role_inheritance_remove_inherited($roles) {
   $inheritanceMap = _role_inheritance_role_map();
   $inheritanceMapCollapsed = _role_inheritance_role_map(NULL, TRUE);
 
