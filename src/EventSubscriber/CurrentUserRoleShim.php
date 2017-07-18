@@ -29,15 +29,15 @@ class CurrentUserRoleShim implements EventSubscriberInterface {
     return([
       KernelEvents::REQUEST => [
         ['alterUser', 299],
-      ]
+      ],
     ]);
   }
 
   /**
    * Replace the current UserSession object with one that has extended roles.
    *
-   * @param GetResponseEvent $event
-   * @return void
+   * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
+   *   Event object being handled.
    */
   public function alterUser(GetResponseEvent $event) {
     $request = $event->getRequest();
@@ -45,7 +45,7 @@ class CurrentUserRoleShim implements EventSubscriberInterface {
     $user = $proxy->getAccount();
 
     if ($user instanceof UserSession) {
-      // Replace the current account with
+      // Replace the current account with.
       $user = new UserSession([
         "uid"                       => $user->id(),
         "mail"                      => $user->getEmail(),
@@ -59,4 +59,5 @@ class CurrentUserRoleShim implements EventSubscriberInterface {
       $proxy->setAccount($user);
     }
   }
+
 }

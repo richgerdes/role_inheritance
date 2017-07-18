@@ -25,15 +25,14 @@ function role_inheritance_entity_type_build(array &$entity_types) {
  * Extends a list of role ids to include inherited ids.
  *
  * @param array $rids
- *   list of role ids to find inheritance of.
+ *   List of role ids to find inheritance of.
  * @param bool $inclusive
  *   Whether to include the values of $rids in the returned list.
  *
  * @return array
- *   list of role ids inherited from $rids.
+ *   List of role ids inherited from $rids.
  */
-function _role_inheritance_extendroles($rids, $inclusive = true) {
-  static $i = 0;
+function _role_inheritance_extendroles(array $rids, $inclusive = TRUE) {
   $collapsed = _role_inheritance_role_map(NULL, TRUE);
   $extended = $rids;
   if ($collapsed) {
@@ -46,7 +45,8 @@ function _role_inheritance_extendroles($rids, $inclusive = true) {
 
   if ($inclusive) {
     return $extended;
-  } else {
+  }
+  else {
     return array_diff($extended, $rids);
   }
 }
@@ -64,7 +64,7 @@ function _role_inheritance_extendroles($rids, $inclusive = true) {
  * proxy through Global Editor. This relation is indirect inheritance.
  *
  * @param array $map
- *   Original direct role inheritance mapping.
+ *   Direct role inheritance mapping.
  * @param array $collapse
  *   Mapping of collapsed roles to append new data onto.
  * @param string $role
@@ -74,13 +74,13 @@ function _role_inheritance_extendroles($rids, $inclusive = true) {
  *   Single dementional array where keys are mapped to a list of all roles they
  *   inherit from.
  */
-function _role_inheritance_role_map_collpase($map, $collapse = array(), $role = NULL) {
+function _role_inheritance_role_map_collpase(array $map, array $collapse = [], $role = NULL) {
   if ($role != NULL) {
     if (in_array($role, array_keys($map))) {
       $collapse[$role] = $map[$role];
     }
     else {
-      $collapse[$role] = array();
+      $collapse[$role] = [];
     }
 
     foreach ($map[$role] as $id) {
@@ -125,7 +125,7 @@ function _role_inheritance_role_map($updateMap = NULL, $collapse = FALSE) {
     $roleMap = $config->get('role_map');
 
     if (empty($roleMap) || !is_array($roleMap)) {
-      $roleMap = array();
+      $roleMap = [];
 
       $config->set('role_map', $roleMap);
       $config->save();
@@ -151,7 +151,7 @@ function _role_inheritance_role_map($updateMap = NULL, $collapse = FALSE) {
  * Adds role inheritance options to role edit/creation form.
  */
 function role_inheritance_form_user_role_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  $role_names = array();
+  $role_names = [];
   foreach (user_roles() as $role_name => $role) {
     // Retrieve role names for columns.
     $role_names[$role_name] = $role->label();
@@ -163,18 +163,16 @@ function role_inheritance_form_user_role_form_alter(&$form, FormStateInterface $
     $inherits = $role_mapping[$form['id']['#default_value']];
   }
 
-  $form['inheritance'] = array(
+  $form['inheritance'] = [
     '#type' => 'checkboxes',
     '#title' => t('Inherits From Roles'),
     '#id' => 'role-inheritance',
     '#attributes' => ['class' => ['role-inheritance', 'js-role-inheritance']],
     '#sticky' => TRUE,
     '#options' => $role_names,
-    '#default_value' => isset($inherits) ? $inherits : array(),
+    '#default_value' => isset($inherits) ? $inherits : [],
     '#description' => t('Select the roles that this role should inherit permission grants from.'),
-  );
-
-  // @TODO enfore inheritance from authenticated and that admin roles inherit all.
+  ];
 
   $form['actions']['submit']['#submit'][] = 'role_inheritance_form_user_role_form_submit';
 }
@@ -185,7 +183,6 @@ function role_inheritance_form_user_role_form_alter(&$form, FormStateInterface $
 function role_inheritance_form_user_role_form_submit(&$form, FormStateInterface $form_state) {
 
   $values = $form_state->getValues();
-  $roles = array_keys(user_roles());
 
   $mapping = _role_inheritance_role_map();
   $mapping[$values['id']] = array_filter($values['inheritance']);
@@ -198,7 +195,7 @@ function role_inheritance_form_user_role_form_submit(&$form, FormStateInterface 
  *
  * When adding a new role, we should set the default inheritance for that role.
  */
-function role_inheritance_form_user_role_insert(Drupal\Core\Entity\EntityInterface $newRole) {
+function role_inheritance_form_user_role_insert(EntityInterface $newRole) {
   $map = _role_inheritance_role_map();
   $map[$newRole->id()] = [AccountInterface::AUTHENTICATED_ROLE];
   $roles = user_roles();
@@ -215,7 +212,7 @@ function role_inheritance_form_user_role_insert(Drupal\Core\Entity\EntityInterfa
  *
  * When deleting a role, cleanup inheritance map.
  */
-function role_inheritance_form_user_role_delete(Drupal\Core\Entity\EntityInterface $role) {
+function role_inheritance_form_user_role_delete(EntityInterface $role) {
   $map = _role_inheritance_role_map();
   $removed_id = $role->id();
   foreach ($map as $rid => $inherited) {
@@ -240,10 +237,10 @@ function role_inheritance_form_user_role_delete(Drupal\Core\Entity\EntityInterfa
  * @see role_inheritance_user_presave()
  */
 function role_inheritance_user_load($users) {
-  foreach ($users as $uid => $user) {
+  foreach ($users as $user) {
     $rids = $user->getRoles();
-    $extended = _role_inheritance_extendroles($rids, false);
-    // store the list of extra roles so we can remove them.
+    $extended = _role_inheritance_extendroles($rids, FALSE);
+    // Store the list of extra roles so we can remove them.
     $user->_role_inheritance_extended_roles = $extended;
     foreach ($extended as $role) {
       if ($role != AccountInterface::AUTHENTICATED_ROLE
@@ -263,7 +260,7 @@ function role_inheritance_user_load($users) {
  * @see role_inheritance_user_load()
  */
 function role_inheritance_user_presave(EntityInterface $user) {
-  // check if user has extended roles. IF so remove them.
+  // Check if user has extended roles. IF so remove them.
   if (isset($user->_role_inheritance_extended_roles)) {
     $rids = $user->_role_inheritance_extended_roles;
     foreach ($rids as $role) {
@@ -287,7 +284,7 @@ function role_inheritance_form_user_form_alter(&$form, FormStateInterface $form_
   if (isset($form["account"]["roles"]["#default_value"]) && isset($user->_role_inheritance_extended_roles)) {
     $form["account"]["roles"]["#default_value"] = array_diff($form["account"]["roles"]["#default_value"], $user->_role_inheritance_extended_roles);
 
-    // set submission handler.
+    // Set submission handler.
     array_unshift($form['actions']['submit']['#submit'], 'role_inheritance_form_user_form_submit');
   }
 }
@@ -308,7 +305,7 @@ function role_inheritance_form_user_form_submit($form, FormStateInterface $form_
   $user = $form_state->getFormObject()->getEntity();
   if (isset($values['roles']) && isset($user->_role_inheritance_extended_roles)) {
     $submitted_roles = $values['roles'];
-    // remove roles that were just added from extended role list.
+    // Remove roles that were just added from extended role list.
     $user->_role_inheritance_extended_roles = array_diff($user->_role_inheritance_extended_roles, $submitted_roles);
   }
 }
@@ -328,9 +325,9 @@ function role_inheritance_form_role_delegation_role_assign_form_alter(&$form, Fo
     $form["account"]["role_change"]["#default_value"] = array_diff($form["account"]["role_change"]["#default_value"], $user->_role_inheritance_extended_roles);
 
     if (!isset($form['actions']['submit']['#submit']) || !is_array($form['actions']['submit']['#submit'])) {
-      $form['actions']['submit']['#submit'] = array();
+      $form['actions']['submit']['#submit'] = [];
     }
-    // set submission handler.
+    // Set submission handler.
     array_unshift($form['actions']['submit']['#submit'], 'role_inheritance_form_role_delegation_role_assign_form_submit');
   }
 }
@@ -351,7 +348,7 @@ function role_inheritance_form_role_delegation_role_assign_form_submit($form, Fo
   $user = $form_state->getBuildInfo()['args'][0];
   if (isset($values['role_change']) && isset($user->_role_inheritance_extended_roles)) {
     $submitted_roles = $values['role_change'];
-    // remove roles that were just added from extended role list.
+    // Remove roles that were just added from extended role list.
     $user->_role_inheritance_extended_roles = array_diff($user->_role_inheritance_extended_roles, $submitted_roles);
   }
 }
@@ -364,29 +361,32 @@ function role_inheritance_form_role_delegation_role_assign_form_submit($form, Fo
  * Usage Example: Content only needs to have lowest roles in the tree, and
  * through role inheritance, the other roles higher will be provided.
  *
- * @see _role_inheritance_remove_inherited()
- *
  * @param array $roles
  *   A list of roles reduce.
+ *
+ * @see _role_inheritance_remove_inherited()
  *
  * @return array
  *   $roles minus any roles inherted by others in the list.
  */
-function _role_inheritance_remove_receivers($roles) {
-  $inheritanceMap = _role_inheritance_role_map();
+function _role_inheritance_remove_receivers(array $roles) {
   $inheritanceMapCollapsed = _role_inheritance_role_map(NULL, TRUE);
 
   $providable_roles = $roles;
   $removable_roles = $roles;
 
   foreach ($providable_roles as $providable_role) {
-    // If source role, is not already removed
+    // If source role, is not already removed.
     if (in_array($providable_role, $roles)) {
       foreach ($removable_roles as $removable_role) {
-        if ($providable_role !== $removable_role                                        // Don't remove current role.
-            && ($key = array_search($removable_role, $roles)) !== false             // If target role, is not already removed.
-            && in_array($providable_role, $inheritanceMapCollapsed[$removable_role])) { // And removable_role grants providable_role
-          unset($roles[$key]);  // Remove target role.
+        // Don't remove current role.
+        if ($providable_role !== $removable_role
+        // If target role, is not already removed.
+            && ($key = array_search($removable_role, $roles)) !== FALSE
+        // And removable_role grants providable_role.
+            && in_array($providable_role, $inheritanceMapCollapsed[$removable_role])) {
+          // Remove target role.
+          unset($roles[$key]);
         }
       }
     }
@@ -405,29 +405,32 @@ function _role_inheritance_remove_receivers($roles) {
  * Usage Example: Users only need the highest roles in a tree, and via role
  * inheritance roles below those will also be given to the user.
  *
- * @see _role_inheritance_remove_providers()
- *
  * @param array $roles
  *   A list of roles reduce.
+ *
+ * @see _role_inheritance_remove_providers()
  *
  * @return array
  *   $roles minus any roles that inherit from others in the list.
  */
-function _role_inheritance_remove_inherited($roles) {
-  $inheritanceMap = _role_inheritance_role_map();
+function _role_inheritance_remove_inherited(array $roles) {
   $inheritanceMapCollapsed = _role_inheritance_role_map(NULL, TRUE);
 
   $providers = $roles;
   $removable_roles = $roles;
 
   foreach ($providers as $provider_role) {
-    // If source role, is not already removed
+    // If source role, is not already removed.
     if (in_array($provider_role, $roles)) {
       foreach ($removable_roles as $removable_role) {
-        if ($provider_role !== $removable_role                                        // Don't remove current role.
-            && ($key = array_search($removable_role, $roles)) !== false             // If target role, is not already removed.
-            && in_array($removable_role, $inheritanceMapCollapsed[$provider_role])) { // And provider_role grants removable_role
-          unset($roles[$key]);  // Remove target role.
+        // Don't remove current role.
+        if ($provider_role !== $removable_role
+        // If target role, is not already removed.
+            && ($key = array_search($removable_role, $roles)) !== FALSE
+        // And provider_role grants removable_role.
+            && in_array($removable_role, $inheritanceMapCollapsed[$provider_role])) {
+          // Remove target role.
+          unset($roles[$key]);
         }
       }
     }
@@ -439,19 +442,22 @@ function _role_inheritance_remove_inherited($roles) {
 /**
  * Implements hook_form_FORM_ID_alter().
  *
- * Require the js script to show role inheritance on the permissions table, and setup automation
+ * Require the js script to show role inheritance on the permissions table, and
+ * setup automation.
  */
 function role_inheritance_form_user_admin_permissions_alter(&$form, FormStateInterface $form_state, $form_id) {
   $inheritanceMapCollapsed = _role_inheritance_role_map(NULL, TRUE);
-  $inheritedPermissions = array();    // mapping of each permission for a role, and what roles they are inherited from.
-  $providers = array();              // mapping of a role and what role inherit from it.
+  // Mapp of each permission for a role, and what roles they are inherited from.
+  $inheritedPermissions = [];
+  // Mapping of a role and what role inherit from it.
+  $providers = [];
 
   foreach ($inheritanceMapCollapsed as $rid => $inherit_from) {
     foreach ($inherit_from as $provider) {
       $providers[$provider][] = $rid;
 
       $role = Role::load($provider);
-      if ($role === null) {
+      if ($role === NULL) {
         continue;
       }
 
@@ -464,7 +470,7 @@ function role_inheritance_form_user_admin_permissions_alter(&$form, FormStateInt
 
   // Remove user.permissions library since it, just provides inheritcance of
   // the authenticated user role by all other roles.
-  $form['#attached']['library'] = array_diff($form['#attached']['library'], array('user/drupal.user.permissions'));
+  $form['#attached']['library'] = array_diff($form['#attached']['library'], ['user/drupal.user.permissions']);
   $form['#attached']['library'][] = 'role_inheritance/role_inheritance.permissions';
   $form['#attached']['drupalSettings']['role_inheritance']['map'] = $inheritanceMapCollapsed;
   $form['#attached']['drupalSettings']['role_inheritance']['inherited'] = $inheritedPermissions;

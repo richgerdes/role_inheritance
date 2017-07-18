@@ -2,7 +2,7 @@
 
 namespace Drupal\role_inheritance;
 
-use \Drupal\user\RoleStorage;
+use Drupal\user\RoleStorage;
 
 /**
  * Class to replace Core role storage class to allow permission inheritance.
