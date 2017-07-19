@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Contain role_inheritance.install.
+ */
+
 use Drupal\Core\Session\AccountInterface;
 
 /**
@@ -14,7 +19,7 @@ function role_inheritance_install() {
   $roles = user_roles();
   foreach ($roles as $rid => $role) {
     if ($rid !== AccountInterface::ANONYMOUS_ROLE) {
-      $map[$rid][]  = AccountInterface::AUTHENTICATED_ROLE;
+      $map[$rid][] = AccountInterface::AUTHENTICATED_ROLE;
     }
     if ($role->isAdmin()) {
       foreach ($roles as $srid => $srole) {
