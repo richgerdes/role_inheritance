@@ -5,14 +5,11 @@ namespace Drupal\role_inheritance\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Contribute form.
  */
 class RoleInheritanceAdminForm extends FormBase {
-
-  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
