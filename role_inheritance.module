@@ -11,8 +11,6 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\user\Entity\Role;
 
 /**
- * Helper Function for RoleInheritanceStorage class.
- *
  * Extends a list of role ids to include inherited ids.
  *
  * @param array $rids
