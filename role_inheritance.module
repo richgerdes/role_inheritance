@@ -11,15 +11,6 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\user\Entity\Role;
 
 /**
- * Implements hook_entity_type_build().
- */
-function role_inheritance_entity_type_build(array &$entity_types) {
-  // Override entity storage class for user_role to allow for role inheritance
-  // during $user->hasPermission() (by altering isPermissionInRoles()).
-  $entity_types['user_role']->setStorageClass('Drupal\role_inheritance\RoleInheritanceStorage');
-}
-
-/**
  * Helper Function for RoleInheritanceStorage class.
  *
  * Extends a list of role ids to include inherited ids.
