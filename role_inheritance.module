@@ -27,7 +27,7 @@ function _role_inheritance_extendroles(array $rids, $inclusive = TRUE) {
   if ($collapsed) {
     foreach ($rids as $role) {
       if (in_array($role, array_keys($collapsed))) {
-        $extended = array_merge($extended, $collapsed[$role]);
+        $extended = array_unique(array_merge($extended, $collapsed[$role]));
       }
     }
   }
@@ -180,11 +180,11 @@ function role_inheritance_form_user_role_form_submit(&$form, FormStateInterface 
 }
 
 /**
- * Implements hook_form_FORM_ID_insert().
+ * Implements hook_ENTITY_ID_insert().
  *
  * When adding a new role, we should set the default inheritance for that role.
  */
-function role_inheritance_form_user_role_insert(EntityInterface $newRole) {
+function role_inheritance_user_role_insert(EntityInterface $newRole) {
   $map = _role_inheritance_role_map();
   $map[$newRole->id()] = [AccountInterface::AUTHENTICATED_ROLE];
   $roles = user_roles();
